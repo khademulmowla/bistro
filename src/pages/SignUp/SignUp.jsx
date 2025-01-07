@@ -3,9 +3,12 @@ import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../providers/AuthProvider';
 import Swal from 'sweetalert2';
+import useAxiosPublic from '../../hooks/useAxiosPublic';
+import SocialLogin from '../../components/SocialLogin/SocialLogin';
 
 const SignUp = () => {
     const navigate = useNavigate()
+    const axiosPublic = useAxiosPublic()
     const { createUser, updateUserProfile } = useContext(AuthContext)
     const { register, handleSubmit, reset, formState: { errors } } = useForm()
     const onSubmit = (data) => {
@@ -15,16 +18,28 @@ const SignUp = () => {
                 console.log(loggedUser)
                 updateUserProfile(data.name, data.photoURL)
                     .then(() => {
-                        console.log('user profile info updated')
-                        reset();
-                        Swal.fire({
-                            position: "top-end",
-                            icon: "success",
-                            title: "profile updated",
-                            showConfirmButton: false,
-                            timer: 1500
-                        });
-                        navigate('/')
+                        const userInfo = {
+                            name: data.name,
+                            email: data.email
+                        }
+                        axiosPublic.post('/users', userInfo)
+                            .then(res => {
+                                if (res.data.insertedId) {
+                                    console.log('added')
+                                    reset();
+                                    Swal.fire({
+                                        position: "top-end",
+                                        icon: "success",
+                                        title: "profile updated",
+                                        showConfirmButton: false,
+                                        timer: 1500
+                                    });
+                                    navigate('/')
+
+                                }
+                            })
+                        // console.log('user profile info updated')
+
                     })
                     .catch(error => console.log(error))
             })
@@ -79,6 +94,7 @@ const SignUp = () => {
                         </div>
                     </form>
                     <p className='text-center pb-2'><small>Already have an account? <Link className='underline hover:text-orange-600' to='/login'>login now</Link></small></p>
+                    <SocialLogin></SocialLogin>
                 </div>
             </div>
         </div>
